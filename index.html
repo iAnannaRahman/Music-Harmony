@@ -1,0 +1,302 @@
+<!--
+    Winhweel.js wheel of fortune example by Douglas McKechie @ www.dougtesting.net
+    See website for tutorials and other documentation.
+
+    The MIT License (MIT)
+
+    Copyright (c) 2016 Douglas McKechie
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+-->
+<html>
+    <head>
+        <title>HTML5 Canvas Winning Wheel</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <link rel="stylesheet" href="main.css" type="text/css" />
+        <link rel = "manifest" href="manifest.json"/> 
+    
+        <script type="text/javascript" src="Winwheel.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+    </head>
+    <body>
+       
+            <table cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td>
+                    <div class="power_controls">
+                        <br />
+                        <br />
+                      
+                        <br />
+                        <img id="spin_button" src="spin_off.png" alt="Spin" onClick="startSpin();" />
+                        <br /><br />
+                        </div>
+                </td>
+                <td width="850" height="850" class="the_wheel" align="center" valign="center">
+                    <canvas id="canvas" width="834" height="834">
+                        <p style="{color: white}" align="center">Sorry, your browser doesn't support canvas. Please try another.</p>
+                    </canvas>
+                </td>
+            </tr>
+        </table>
+        <script>
+            // Create new wheel object specifying the parameters at creation time.
+            let theWheel = new Winwheel({
+                //'responsive'   : true, 
+                'outerRadius'     : 290,        // Set outer radius so wheel fits inside the background.
+                'innerRadius'     : 200,         // Make wheel hollow so segments don't go all way to center.
+                'textFontSize'    : 16,  
+                'pointerAngle'   : 20,        // Set default font size for the segments.
+                'textAlignment'     : 'outer',
+                'numSegments'     : 12,
+                
+                'textFontFamily'    : 'monospace',
+               // 'textStrokeStyle'   : 'black',
+                'textLineWidth'     : 1,
+                'strokeStyle'       : 'white',   
+                    // Specify number of segments.
+                    'fillStyle' : null,
+                
+                'segments'        :             // Define segments including colour and text.
+                [                               // font size and test colour overridden on backrupt segments.
+                   {'textOrientation'   : 'curved', 'text' : 'Ionian\n I1'},
+                   {'textOrientation'   : 'curved','text' : ' 5V \n Lydian '},
+                   {'textOrientation'   : 'horizontal', 'text' : '2II-'},
+                   { 'textOrientation'   : 'horizontal','textDirection'     : 'reversed','textOrientation'   : 'curved','text' : '6VI-'},
+                   { 'textOrientation'   : 'horizontal','textDirection'     : 'reversed','textOrientation'   : 'curved','text' : '3III-'},
+                   {'textOrientation'   : 'curved','textDirection'     : 'reversed', 'text' : '7VIIo'},
+                   { 'textOrientation'   : 'curved','textDirection'     : 'reversed','text' : '+4/b5\n+o'},
+                   {  'textOrientation'   : 'curved','textDirection'     : 'reversed','text' : 'b2\nLocrian'},
+                   {  'textOrientation'   : 'curved','textDirection'     : 'reversed','text' : 'b6 \n Phrygian'},
+                  
+                   {  'textOrientation'   : 'curved','textDirection'     : 'reversed','text' : 'b3 \n Aeolian'},
+                   {'textOrientation'   : 'curved','textDirection'     : 'reversed','text' : 'b7 \n Dorian'},
+                   {'textOrientation'   : 'curved','text' : 'IV4 \n Mixolydian'}
+                  
+                ]
+               
+            });
+          
+            let outerWheel = new Winwheel({
+                'numSegments': 12,
+                'textMargin' : 0,
+             
+                //'pointerAngle'   : 20,  
+                //'textOrientation' : 'vertical', // Make text vertial so goes down from the outside of wheel.
+                'fillStyle' : null,
+                'textFontSize'    : 18,  
+                'textStrokeStyle'   : 'black',
+                'textOrientation'   : 'curved',
+                'outerRadius' : 412,
+                'innerRadius' : 300,    // Set inner radius to the size of the inner wheel since the inner part of the wheel
+                'segments': [           //   is being drawn by the inner wheel we don't need to draw there.
+                    { 'text' : 'C'},
+                    { 'text' : 'G'},
+                    { 'text' : 'D'},
+                    { 'text' : 'A'},
+                    { 'text' : 'E' },
+                    { 'text' : 'B'},
+                    { 'text' : 'F#'},
+                    { 'text' : 'Db'},
+                    { 'text' : 'Ab'},
+                    { 'text' : 'Eb'},
+                    { 'text' : 'Bb'},
+                    { 'text' : 'F'}
+                ],
+                'animation' :           // Specify the animation to use.
+                {
+                    'type'     : 'spinToStop',
+                    'duration' : 4,    // Duration in seconds.
+                    'spins'    : 1,     // Default number of complete spins.
+                    'callbackAfter' : drawOuterWheel, 
+                    'callbackFinished' : alertPrize,
+                    'callbackSound'    : playSound,   // Function to call when the tick sound is to be triggered.
+                    'soundTrigger'     : 'pin'        // Specify pins are to trigger the sound, the other option is 'segment'.
+                }
+               
+            });
+            let centerWheel = new Winwheel({
+                //'responsive'   : true, 
+                'outerRadius'     : 160,        // Set outer radius so wheel fits inside the background.
+                'innerRadius'     : 100,         // Make wheel hollow so segments don't go all way to center.
+                'textFontSize'    : 16,  
+                'pointerAngle'   : 20,        // Set default font size for the segments.
+                'textAlignment'     : 'outer',
+                'numSegments'     : 12,
+                 'strokeStyle'       : 'black',  
+                'textFontFamily'    : 'monospace',
+              
+                'textLineWidth'     : 1,
+               
+                    // Specify number of segments.
+                    'fillStyle' : null,
+                
+                'segments'        :             // Define segments including colour and text.
+                [                               // font size and test colour overridden on backrupt segments.
+                   {'textOrientation'   : 'curved', 'text' : '1'},
+                   {'textOrientation'   : 'curved','text' : ' 12 '},
+                   {'textOrientation'   : 'horizontal', 'text' : '9'},
+                   { 'textOrientation'   : 'horizontal','textDirection'     : 'reversed','textOrientation'   : 'curved','text' : '13'},
+                   { 'textOrientation'   : 'horizontal','textDirection'     : 'reversed','textOrientation'   : 'curved','text' : '10'},
+                   {'textOrientation'   : 'curved','textDirection'     : 'reversed', 'text' : '7'},
+                   { 'textOrientation'   : 'curved','textDirection'     : 'reversed','text' : 'b12'},
+                   {  'textOrientation'   : 'curved','textDirection'     : 'reversed','text' : 'b9'},
+                   {  'textOrientation'   : 'curved','textDirection'     : 'reversed','text' : 'b13'},
+                  
+                   {  'textOrientation'   : 'curved','textDirection'     : 'reversed','text' : 'b10'},
+                   {'textOrientation'   : 'curved','textDirection'     : 'reversed','text' : 'b7'},
+                   {'textOrientation'   : 'curved','text' : '11'}
+                  
+                ]
+               
+            });
+          
+            outerWheel.draw();
+            theWheel.draw(false); 
+            centerWheel.draw(false);
+              // Pass false to stop it clearing the canvas and wiping the outer wheel.
+
+            // This function is called after the outer wheel has drawn during the animation.
+            function drawOuterWheel()
+            {
+                // Update the rotationAngle of the innnerWheel to match that of the outer wheel - this is a big part of what
+                // links them to appear as one 2-part wheel. Call the draw function passing false so the outer wheel is not wiped.
+                //innerWheel.rotationAngle = outerWheel.rotationAngle;
+                theWheel.draw(false);
+                centerWheel.draw(false);
+            }
+            // Loads the tick audio sound in to an audio object.
+            let audio = new Audio('tick.mp3');
+            
+
+            // This function is called when the sound is to be played.
+            function playSound()
+            {
+                // Stop and rewind the sound if it already happens to be playing.
+                audio.pause();
+                audio.currentTime = 0;
+
+                // Play the sound.
+                audio.play();
+            }
+
+            // Vars used by the code in this page to do power controls.
+            let wheelPower    = 0;
+            let wheelSpinning = false;
+
+            // -------------------------------------------------------
+            // Function to handle the onClick on the power buttons.
+            // -------------------------------------------------------
+            function powerSelected(powerLevel)
+            {
+                // Ensure that power can't be changed while wheel is spinning.
+                if (wheelSpinning == false) {
+                    // Reset all to grey incase this is not the first time the user has selected the power.
+              
+                    document.getElementById('pw3').className = "";
+
+                    // Now light up all cells below-and-including the one selected by changing the class.
+                    
+                        document.getElementById('pw3').className = "pw3";
+                    
+
+                    // Set wheelPower var used when spin button is clicked.
+                    wheelPower = powerLevel;
+
+                    // Light up the spin button by changing it's source image and adding a clickable class to it.
+                    document.getElementById('spin_button').src = "spin_on.png";
+                    document.getElementById('spin_button').className = "clickable";
+                }
+            }
+
+            // -------------------------------------------------------
+            // Click handler for spin button.
+            // -------------------------------------------------------
+            function startSpin()
+            {
+                // Ensure that spinning can't be clicked again while already running.
+                if (wheelSpinning == false) {
+                    outerWheel.stopAnimation(false);  // Stop the animation, false as param so does not call callback function.
+                    outerWheel.rotationAngle = 0;     // Re-set the wheel angle to 0 degrees.
+                    outerWheel.draw();                // Call draw to render changes to the wheel.
+                    theWheel.rotationAngle = 0;
+                    theWheel.draw(false);
+                    centerWheel.draw(false);
+                    // Based on the power level selected adjust the number of spins for the wheel, the more times is has
+                    // to rotate with the duration of the animation the quicker the wheel spins.
+                     if (wheelPower == 3) {
+                        outerWheel.animation.spins = 10;
+                    }
+
+                    // Disable the spin button so can't click again while wheel is spinning.
+                    document.getElementById('spin_button').src       = "spin_off.png";
+                    document.getElementById('spin_button').className = "";
+
+                    // Begin the spin animation by calling startAnimation on the wheel object.
+                    outerWheel.startAnimation();
+
+                    // Set to true so that power can't be changed and spin button re-enabled during
+                    // the current animation. The user will have to reset before spinning again.
+                    wheelSpinning = true;
+                }
+            }
+
+            // -------------------------------------------------------
+            // Function for reset button.
+            // -------------------------------------------------------
+            function resetWheel()
+            {
+                outerWheel.stopAnimation(false);  // Stop the animation, false as param so does not call callback function.
+                outerWheel.rotationAngle = 0;     // Re-set the wheel angle to 0 degrees.
+                outerWheel.draw();                // Call draw to render changes to the wheel.
+                theWheel.rotationAngle = 0;
+                theWheel.draw(false);
+                centerWheel.draw(false);
+                
+              
+                document.getElementById('pw3').className = "";
+
+                wheelSpinning = false;          // Reset to false to power buttons and spin can be clicked again.
+            }
+
+            // -------------------------------------------------------
+            // Called when the spin animation has finished by the callback feature of the wheel because I specified callback in the parameters.
+            // -------------------------------------------------------
+            function alertPrize()
+            {
+                
+                // The the indicated segments from the 2 wheels.
+                let winningInnerSegment = theWheel.getIndicatedSegment();
+                let winningOuterSegment = outerWheel.getIndicatedSegment();
+
+                // Alert the combination of prizes won.
+               //alert('You won ' + winningInnerSegment.text + ', ' + winningOuterSegment.text);
+
+                // Set things so power and spin button can be clicked again.
+                wheelSpinning = false;
+
+                // Remove all colours from the power level indicators.
+               
+                document.getElementById('pw3').className = "";
+            }
+        </script>
+    </body>
+</html>
